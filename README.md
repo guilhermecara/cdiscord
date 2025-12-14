@@ -25,8 +25,7 @@ npm install
 npx pkg .
 ```
 
-Run the command cdiscord to run!
-
+Run cdiscord in your terminal!
 
 ## Get your discord token
 
