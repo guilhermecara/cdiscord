@@ -22,7 +22,87 @@ function initScreen () {
     return screen;
 }
 
-function createDiscordLayout(screen) {
+function createLoginLayout() {
+    const container = blessed.box({
+        parent: screen,
+        width: '100%',
+        height: '100%',
+        mouse: true,
+        hidden: false,
+    });
+
+    const main = blessed.box({
+        parent: container,
+        width: '80%',
+        height: '80%',
+        top: 'center',
+        left: 'center',
+        label: "Welcome to Cdiscord",
+        border: 'line',
+        mouse: true,
+        hidden: false,
+    })
+
+    const label = blessed.box ({
+        parent: main,
+        top: "15%",
+        left: 'center',
+        width: '60%',
+        height: 4,
+        content: ' Input a valid discord Token. (Refer to the GitHub page for instructions on how to acquire one) ',
+        border: 'line',
+    })
+
+    const form = blessed.box({
+        parent: main,
+        top: 'center',
+        left: 'center',
+        width: '50%',
+        height: 12,
+        label: ' Login ',
+        border: 'line',
+        tags: true,
+        mouse: true
+    });
+
+    const tokenInput = blessed.textbox({
+        parent: form,
+        top: 2,
+        left: 'center',
+        width: '90%',
+        height: 3,
+        label: ' Discord Token ',
+        border: 'line',
+        style: { border: { fg: 'blue' }, focus: { border: { fg: 'cyan' } } },
+        inputOnFocus: true,
+        censor: false, // Hide the token with asterisks
+        keys: true,
+        mouse: true
+    });
+
+    const submitBtn = blessed.button({
+        parent: form,
+        bottom: 1,
+        left: 'center',
+        width: '50%',
+        height: 3,
+        content: 'Connect',
+        align: 'center',
+        valign: 'middle',
+        border: 'line',
+        style: { 
+            border: { fg: 'cyan' },
+            hover: { bg: 'cyan', fg: 'black' },
+            focus: { bg: 'cyan', fg: 'black' } // Visual feedback
+        },
+        mouse: true,
+        keys: true
+    });
+
+    return { container, form, tokenInput, submitBtn };
+}
+
+function createDiscordLayout() {
 
     const container = blessed.box ({
         parent: screen,
@@ -212,7 +292,7 @@ function createDiscordLayout(screen) {
 
         const friendItem = blessed.box({
             parent: friends,
-            top: index * 2 + 4,
+            top: index * 2 + 3,
             width: '100%-3',
             height: 3,
             content: name,   
@@ -240,4 +320,4 @@ function createDiscordLayout(screen) {
     }; 
 }
 
-module.exports = { initScreen, createDiscordLayout };
+module.exports = { initScreen, createLoginLayout, createDiscordLayout };
