@@ -11,6 +11,7 @@ function getFriends () {
           if (friend[1].dmChannel != undefined) {
             friends.push({
               name: friend[1].username,
+              globalName: friend[1].globalName,
               channelId: friend[1].dmChannel.id 
             })
           }
@@ -38,8 +39,9 @@ async function getMessages (channelId) {
 
   fetchedMessages.forEach(msg => {
     messages.push({
-      author: msg.author.globalName,
-      content: msg.content,
+      author: msg.author.username,
+      globalName: msg.author.globalName,
+      content: msg.content
     });
   });
 

@@ -1,27 +1,53 @@
+// MAIN UI LAYOUT FACTORY. //
 
-const blessed = require('blessed');
+const blessed = require('neo-blessed');
 
 const UNACTIVE_COLOR = 'blue';
 const ACTIVE_COLOR = 'cyan';
 
-function createInterface() {
-    const screen = blessed.screen({
+let screen = null;
+
+function initScreen () {
+    if (screen) return screen;
+
+    screen = blessed.screen({
         smartCSR: true,
-        title: 'Cdiscord',
-        fullUnicode: true
+        title: 'CDiscord',
+        fullUnicode: true,
+        dockBorders: true
     });
 
     screen.enableMouse();
-    screen.key(['q', 'C-c'], () => process.exit(0));
+    screen.key(['q','C-c'], () => process.exit(0));
+    return screen;
+}
+
+function createDiscordLayout(screen) {
+
+    const container = blessed.box ({
+        parent: screen,
+        width: '100%',
+        height: '100%',
+        mouse: true,
+        hidden: false,
+    })
 
     const sidebar = blessed.box({
-        parent: screen,
+        parent: container,
         top: 0,
         left: 0,
         width: '20%',
         height: '100%',
-        label: ' Friends ',
         border: 'line',
+        mouse: true,
+        tags: true
+    });
+
+    const friends = blessed.box({
+        parent: sidebar,
+        width: '100%-2',
+        height: '100%',
+        label: ' Friends ',
         scrollable: true,
         alwaysScroll: true,
         mouse: true,
@@ -32,7 +58,7 @@ function createInterface() {
     });
 
     const main = blessed.box({
-        parent: screen,
+        parent: container,
         top: 0,
         left: '20%',
         width: '80%',
@@ -58,7 +84,7 @@ function createInterface() {
     });
 
     const friendSearchInput = blessed.textbox({
-        parent: sidebar,
+        parent: friends,
         top: 0, 
         width: '100%-3', 
         height: 3, 
@@ -92,7 +118,7 @@ function createInterface() {
         }
     });
 
-    const backgroundElements = [sidebar, main, messages];
+    const backgroundElements = [sidebar, main, messages, friends];
     const textInputs = [messageInput, friendSearchInput];
 
     // --- Defocus Logic ---
@@ -115,13 +141,13 @@ function createInterface() {
         });
     });
 
-    messages.writeMessage = function(message, rowSize) { 
+    // --- UI Functions ---
+
+    messages.writeMessage = function(message) { 
         let currentRow = "";
         let visibleInRow = 0;
         
-        if (rowSize == "") {
-            rowSize = messages.rowSize
-        }
+        let rowSize = this.rowSize
 
         let i = 0;
         while (i < message.length) {
@@ -181,14 +207,12 @@ function createInterface() {
         }
     };
 
-    // ---  Activations ---
-
-    sidebar.createFriendElement = function (name, index) {
+    friends.createFriendElement = function (name, index) {
         let safeName = Array.from(name).slice(0, 10 - 3).join('') + "...";
 
         const friendItem = blessed.box({
-            parent: sidebar,
-            top: index * 3 + 5,
+            parent: friends,
+            top: index * 2 + 4,
             width: '100%-3',
             height: 3,
             content: name,   
@@ -206,13 +230,14 @@ function createInterface() {
     };
 
     return {
-        screen,
+        container,
         sidebar,
         main,
         messages,
+        friends,
         messageInput,
         friendSearchInput
     }; 
 }
 
-module.exports = { createInterface };
+module.exports = { initScreen, createDiscordLayout };
