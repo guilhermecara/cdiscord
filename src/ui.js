@@ -4,7 +4,6 @@ const blessed = require('blessed');
 const UNACTIVE_COLOR = 'blue';
 const ACTIVE_COLOR = 'cyan';
 
-
 function createInterface() {
     const screen = blessed.screen({
     smartCSR: true,
@@ -38,18 +37,18 @@ function createInterface() {
     });
 
     const messages = blessed.box({
-    parent: main,
-    top: 0,
-    left: 0,
-    width: '100%-2',
-    height: '100%-4',
-    scrollable: true,
-    alwaysScroll: true,
-    mouse: true,
-    scrollbar: {
-        style: { bg: 'yellow' }
-    },
-    tags: true
+        parent: main,
+        top: 0,
+        left: 0,
+        width: '100%-2',
+        height: '100%-5',
+        scrollable: true,
+        alwaysScroll: true,
+        mouse: true,
+        scrollbar: {
+            style: { bg: UNACTIVE_COLOR }
+        },
+        tags: true
     });
 
     // Text Inputs
@@ -112,9 +111,73 @@ function createInterface() {
     });
     });
 
-    screen.writeMessage = function(message) {
-        messages.pushLine(`${message}`);
+    messages.writeMessage = function(message, rowSize) { 
+        let currentRow = "";
+        let visibleInRow = 0;
+
+        if (rowSize == "") {
+            rowSize = messages.rowSize
+        }
+
+        let i = 0;
+        while (i < message.length) {
+            const tagStart = message.indexOf("{", i);
+            
+            if (tagStart === -1) {
+                const remaining = message.substring(i);
+                i = message.length;
+                
+                for (const char of remaining) {
+                    currentRow += char;
+                    visibleInRow++;
+                    
+                    if (visibleInRow >= rowSize) {
+                        this.pushLine(currentRow);
+                        currentRow = "";
+                        visibleInRow = 0;
+                    }
+                }
+            } else {
+                const visibleText = message.substring(i, tagStart);
+                for (const char of visibleText) {
+                    currentRow += char;
+                    visibleInRow++;
+                    
+                    if (visibleInRow >= rowSize) {
+                        this.pushLine(currentRow);
+                        currentRow = "";
+                        visibleInRow = 0;
+                    }
+                }
+                
+                const tagEnd = message.indexOf("}", tagStart + 1);
+                if (tagEnd === -1) {
+                    const remaining = message.substring(tagStart);
+                    for (const char of remaining) {
+                        currentRow += char;
+                        visibleInRow++;
+                        if (visibleInRow >= rowSize) {
+                            this.pushLine(currentRow);
+                            currentRow = "";
+                            visibleInRow = 0;
+                        }
+                    }
+                    break;
+                }
+                
+                const fullTag = message.substring(tagStart, tagEnd + 1);
+                currentRow += fullTag;
+                
+                i = tagEnd + 1;
+            }
+        }
+        
+        if (currentRow.length > 0) {
+            this.pushLine(currentRow);
+        }
     };
+
+    // ---  Activations ---
 
     return {
         screen,
@@ -126,4 +189,4 @@ function createInterface() {
     }; 
 }
 
-module.exports = { createInterface, writeMessage };
+module.exports = { createInterface };
