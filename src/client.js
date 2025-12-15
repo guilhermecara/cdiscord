@@ -7,16 +7,32 @@ function getFriends () {
     let friends = [];
     let friendListCache = client.relationships.friendCache;
     for (let friend of friendListCache) {
-        if (friend[1]) {
-          if (friend[1].username == "molho_queijo") {
-            return friend[1].dmChannel.id;
+        if (friend[1] && friend[1].dmChannel != "") {
+          if (friend[1].dmChannel != undefined) {
+            friends.push({
+              name: friend[1].username,
+              channelId: friend[1].dmChannel.id 
+            })
           }
         }
     }
+
+    return friends;
+}
+
+async function sendMessage (channelId, message) {
+    let channel = await client.channels.fetch(channelId);
+    await channel.send(message);       
 }
 
 async function getMessages (channelId) {
-  let channel = await client.channels.fetch(channelId);
+  let channel 
+  try {
+    channel = await client.channels.fetch(channelId);
+  }
+  catch {
+    return [];
+  }
   const fetchedMessages = await channel.messages.fetch({ limit: 100 });
   const messages = [];
 
@@ -28,11 +44,6 @@ async function getMessages (channelId) {
   });
 
   return messages;
-}
-
-async function sendMessage (channelId, message) {
-    let channel = await client.channels.fetch(channelId);
-    await channel.send(message);       
 }
 
 module.exports = {client, getFriends, sendMessage, getMessages};

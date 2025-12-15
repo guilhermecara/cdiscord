@@ -6,34 +6,40 @@ const ACTIVE_COLOR = 'cyan';
 
 function createInterface() {
     const screen = blessed.screen({
-    smartCSR: true,
-    title: 'Cdiscord',
-    fullUnicode: true
+        smartCSR: true,
+        title: 'Cdiscord',
+        fullUnicode: true
     });
 
     screen.enableMouse();
     screen.key(['q', 'C-c'], () => process.exit(0));
 
     const sidebar = blessed.box({
-    parent: screen,
-    top: 0,
-    left: 0,
-    width: '20%',
-    height: '100%',
-    label: ' Friends ',
-    border: 'line',
-    mouse: true,
+        parent: screen,
+        top: 0,
+        left: 0,
+        width: '20%',
+        height: '100%',
+        label: ' Friends ',
+        border: 'line',
+        scrollable: true,
+        alwaysScroll: true,
+        mouse: true,
+        scrollbar: {
+            style: { bg: UNACTIVE_COLOR }
+        },
+        tags: true
     });
 
     const main = blessed.box({
-    parent: screen,
-    top: 0,
-    left: '20%',
-    width: '80%',
-    height: '100%',
-    label: ' Chat ',
-    border: 'line',
-    mouse: true,
+        parent: screen,
+        top: 0,
+        left: '20%',
+        width: '80%',
+        height: '100%',
+        label: ' Chat ',
+        border: 'line',
+        mouse: true,
     });
 
     const messages = blessed.box({
@@ -51,39 +57,39 @@ function createInterface() {
         tags: true
     });
 
+    const friendSearchInput = blessed.textbox({
+        parent: sidebar,
+        top: 0, 
+        width: '100%-3', 
+        height: 3, 
+        inputOnFocus: true, 
+        border: 'line', 
+        label: 'Search', 
+        keys: true, 
+        mouse: true, 
+        style: {
+            border: { fg: UNACTIVE_COLOR },
+            focus: { border: { fg: ACTIVE_COLOR } }
+        }
+    });
+
     // Text Inputs
 
     const messageInput = blessed.textbox({
-    parent: main,
-    bottom: 0,
-    left: 0,
-    width: '100%-2',
-    height: 3,
-    inputOnFocus: true,
-    border: 'line',
-    label: ' Message ',
-    keys: true,
-    mouse: true,
-    style: {
-        border: { fg: UNACTIVE_COLOR },
-        focus: { border: { fg: ACTIVE_COLOR } }
-    }
-    });
-
-    const friendSearchInput = blessed.textbox({
-    parent: sidebar,
-    top: 0, 
-    width: '100%-2', 
-    height: 3, 
-    inputOnFocus: true, 
-    border: 'line', 
-    label: '', 
-    keys: true, 
-    mouse: true, 
-    style: {
-        border: { fg: UNACTIVE_COLOR },
-        focus: { border: { fg: ACTIVE_COLOR } }
-    } 
+        parent: main,
+        bottom: 0,
+        left: 0,
+        width: '100%-2',
+        height: 3,
+        inputOnFocus: true,
+        border: 'line',
+        label: ' Message ',
+        keys: true,
+        mouse: true,
+        style: {
+            border: { fg: UNACTIVE_COLOR },
+            focus: { border: { fg: ACTIVE_COLOR } }
+        }
     });
 
     const backgroundElements = [sidebar, main, messages];
@@ -94,27 +100,27 @@ function createInterface() {
     // --- Defocus Logic ---
 
     backgroundElements.forEach((element) => {
-    element.on('click', () => {
-        textInputs.forEach(input => input.cancel());
-        element.focus();
-        screen.render();
-    });
+        element.on('click', () => {
+            textInputs.forEach(input => input.cancel());
+            element.focus();
+            screen.render();
+        });
     });
 
     textInputs.forEach((element) => {
-    element.on("click", () => {
-        textInputs.forEach((_element) => {
-        if (element != _element) {
-            textInputs.forEach(input => input.cancel());
-        }
-        })
-    });
+        element.on("click", () => {
+            textInputs.forEach((_element) => {
+            if (element != _element) {
+                textInputs.forEach(input => input.cancel());
+            }
+            })
+        });
     });
 
     messages.writeMessage = function(message, rowSize) { 
         let currentRow = "";
         let visibleInRow = 0;
-
+        
         if (rowSize == "") {
             rowSize = messages.rowSize
         }
@@ -178,6 +184,27 @@ function createInterface() {
     };
 
     // ---  Activations ---
+
+    sidebar.createFriendElement = function (name, index) {
+        let safeName = Array.from(name).slice(0, 10 - 3).join('') + "...";
+
+        const friendItem = blessed.box({
+            parent: sidebar,
+            top: index * 3 + 5,
+            width: '100%-3', // This means "Sidebar width minus 5 columns"
+            height: 3,
+            content: name,    // ...or inside the box
+            border: 'line',
+            mouse: true,
+            tags: true,
+            wrap: false,      // IMPORTANT: Prevents text from wrapping to the next line
+            style: {
+                focus: { border: { fg: 'cyan' } } // Nice visual cue when clicked
+            }
+        });
+
+        return friendItem;
+    };
 
     return {
         screen,
