@@ -80,24 +80,47 @@ async function loadMessages () {
   screen.render();
 }
 
-async function loadFriends () {
-  let friendList = getFriends();
+friendSearchInput.on("keypress", async (ch, key) => {
+  setTimeout(() => {
+    loadFriends(friendSearchInput.value);
+  }, 0);
+})
+
+async function loadFriends (searchValue) {
+  let friendList = await getFriends();
   
   sidebar.children.slice().forEach(child => {
     if (child.options.label == "Search") return;
     child.destroy();
   });
 
+  let imagePos = 0;
   for (let i = 0; i < friendList.length; i++) {
-    let friendItem = sidebar.createFriendElement (friendList[i].name, i);
-    
+    if (!validateSearchBarInput(friendList[i].name, searchValue)) continue;
+
+    let friendItem = sidebar.createFriendElement(friendList[i].name, imagePos);
       friendItem.on("click", (element) => {
             selectedChannel = friendList[i].channelId;
             loadMessages();
       })
+    
+    imagePos++;
   }
 
   screen.render();
+}
+
+function validateSearchBarInput(friendName, searchValue) {
+  if (!searchValue || searchValue.trim() === "") {
+      return true;
+  }
+  
+  if (!friendName) return false;
+
+  let normalizedName = friendName.toLowerCase().trim();
+  let normalizedSearch = searchValue.toLowerCase().trim();
+  
+  return normalizedName.includes(normalizedSearch);
 }
 
 //let channel = await client.channels.fetch(friendObject.dmChannel.id);
