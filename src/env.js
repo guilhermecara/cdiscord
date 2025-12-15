@@ -1,17 +1,24 @@
 const fs = require("fs");
+const path = require("path");
 
-const env = fs.readFileSync(".env", "utf8");
+const envPath = path.resolve(__dirname, "..", ".env");
 
-for (const line of env.split("\n")) {
-  if (!line || line.startsWith("#")) continue;
+if (fs.existsSync(envPath)) {
+  const env = fs.readFileSync(envPath, "utf8");
 
-  const i = line.indexOf("=");
-  if (i === -1) continue;
+  for (const line of env.split("\n")) {
+    if (!line || line.trim().startsWith("#")) continue;
 
-  const k = line.slice(0, i).trim();
-  const v = line.slice(i + 1).trim();
+    const i = line.indexOf("=");
+    if (i === -1) continue;
 
-  if (!(k in process.env)) process.env[k] = v;
+    const k = line.slice(0, i).trim();
+    const v = line.slice(i + 1).trim();
+
+    if (!(k in process.env)) process.env[k] = v;
+  }
+} else {
+    console.warn("Warning: .env file not found at", envPath);
 }
 
 module.exports = {};
