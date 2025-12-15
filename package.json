@@ -14,9 +14,9 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "blessed": "^0.1.81",
     "debug": "^4.4.3",
     "discord.js-selfbot-v13": "^3.7.1",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "neo-blessed": "^0.2.0"
   }
 }
