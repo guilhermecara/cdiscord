@@ -26,7 +26,7 @@ messageInput.on('submit', async (text) => {
   const time = new Date().toLocaleTimeString();
   try {
     await sendMessage(selectedChannel,text);
-    messages.writeMessage(`{blue-fg}${client.user.globalName}:{/blue-fg} ${text}`);
+    messages.writeMessage(`{cyan-fg}${client.user.globalName}:{/cyan-fg} ${text}`);
   }
   catch (error) {
     messages.writeMessage('{red-fg}System:{/red-fg} An error has occured'); // Change to index
@@ -55,10 +55,10 @@ client.on('ready', async () => {
 })
 
 client.on('messageCreate', async message => {
-    if (message.author.dmChannel == undefined) return;
-    if (message.author.dmChannel.id != selectedChannel) return;
+    if (message.channelId != selectedChannel) return;
 
     messages.pushLine(`{blue-fg}${message.author.username}:{/blue-fg} ${message.content}`);
+    messages.setScrollPerc(messages.getScrollPerc() + 1);
     screen.render();
 });
 
@@ -96,13 +96,21 @@ async function loadFriends (searchValue) {
 
   let imagePos = 0;
   for (let i = 0; i < friendList.length; i++) {
-    if (!validateSearchBarInput(friendList[i].name, searchValue)) continue;
+    if (!filterSearchBarInput(friendList[i].name, searchValue)) continue;
 
     let friendItem = sidebar.createFriendElement(friendList[i].name, imagePos);
-      friendItem.on("click", (element) => {
-            selectedChannel = friendList[i].channelId;
-            loadMessages();
-      })
+    friendItem.on("click", (element) => {
+      screen.focusPop();
+      sidebar.children.slice().forEach(child => {
+        if (child.options.content == friendList[i].name) {
+          child.style.border.fg = "cyan";
+          return;
+        }
+        child.style.border.fg = "blue";
+      });
+      selectedChannel = friendList[i].channelId;
+      loadMessages();
+    })
     
     imagePos++;
   }
@@ -110,7 +118,7 @@ async function loadFriends (searchValue) {
   screen.render();
 }
 
-function validateSearchBarInput(friendName, searchValue) {
+function filterSearchBarInput(friendName, searchValue) {
   if (!searchValue || searchValue.trim() === "") {
       return true;
   }
@@ -121,7 +129,4 @@ function validateSearchBarInput(friendName, searchValue) {
   let normalizedSearch = searchValue.toLowerCase().trim();
   
   return normalizedName.includes(normalizedSearch);
-}
-
-//let channel = await client.channels.fetch(friendObject.dmChannel.id);
-//await channel.send(MESSAGE);       
+}    

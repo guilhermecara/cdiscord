@@ -95,8 +95,6 @@ function createInterface() {
     const backgroundElements = [sidebar, main, messages];
     const textInputs = [messageInput, friendSearchInput];
 
-    friendSearchInput.on('submit', (text) => {}); // Implement search mechanic locally?
-
     // --- Defocus Logic ---
 
     backgroundElements.forEach((element) => {
@@ -191,15 +189,16 @@ function createInterface() {
         const friendItem = blessed.box({
             parent: sidebar,
             top: index * 3 + 5,
-            width: '100%-3', // This means "Sidebar width minus 5 columns"
+            width: '100%-3',
             height: 3,
-            content: name,    // ...or inside the box
+            content: name,   
             border: 'line',
             mouse: true,
             tags: true,
-            wrap: false,      // IMPORTANT: Prevents text from wrapping to the next line
+            wrap: false,    
             style: {
-                focus: { border: { fg: 'cyan' } } // Nice visual cue when clicked
+                border: { fg: UNACTIVE_COLOR },
+                focus: { border: { fg: ACTIVE_COLOR } }
             }
         });
 
