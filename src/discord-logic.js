@@ -1,5 +1,8 @@
 const keytar = require('./keytar-utils.js');
 
+const USER_MESSAGE_COLOR = "cyan";
+const OTHER_MESSAGE_COLOR = "blue";
+
 function attach (screen, ui, clientLogic) {
 
   const { container, sidebar, main, messages, friends, messageInput, friendSearchInput} = ui;
@@ -9,22 +12,26 @@ function attach (screen, ui, clientLogic) {
 
   let selectedChannel = "";
 
-  messages.writeMessage('{blue-fg}System:{/blue-fg} Welcome to Cdiscord!');
+  // --- Initial Setup ---
+
+  messages.writeMessage(`{blue-fg}System:{/blue-fg} Discord loaded. Welcome, ${client.user.username}`); // Change to index
+  loadMessages ();
+  loadFriends ();
+  
+  loggedIn =  true;
   screen.render();
   
-  // Discord Client Events
+  // --- Discord Client Events ---
   
-    messages.writeMessage(`{blue-fg}System:{/blue-fg} Discord loaded. Welcome, ${client.user.username}`); // Change to index
-    loadMessages ();
-    loadFriends ();
-    
-    loggedIn =  true;
-    screen.render();
-
   client.on('messageCreate', async message => {
       if (message.channelId != selectedChannel) return;
 
-      messages.pushLine(`{blue-fg}${message.author.username}:{/blue-fg} ${message.content}`);
+      let nameColor = OTHER_MESSAGE_COLOR;
+      if (message.author.username == client.user.username) {
+        nameColor = USER_MESSAGE_COLOR;
+      }
+
+      messages.pushLine(`{${nameColor}-fg}${message.author.username}:{/${nameColor}-fg} ${message.content}`);
       messages.setScrollPerc(messages.getScrollPerc() + 1);
       screen.render();
   });
@@ -42,9 +49,9 @@ function attach (screen, ui, clientLogic) {
     const chatHistory = await clientLogic.getMessages(selectedChannel);
     for (let i = chatHistory.length - 1; i > -1; i--) {
       let message = chatHistory[i];
-      let nameColor = "blue";
+      let nameColor = OTHER_MESSAGE_COLOR;
       if (message.author == client.user.username) {
-        nameColor = "cyan";
+        nameColor = USER_MESSAGE_COLOR;
       }
       messages.writeMessage(`{${nameColor}-fg}${message.author}:{/${nameColor}-fg} ${message.content}`);
     }
@@ -103,8 +110,7 @@ function attach (screen, ui, clientLogic) {
 
     const time = new Date().toLocaleTimeString();
     try {
-      await sendMessage(selectedChannel,text);
-      messages.writeMessage(`{cyan-fg}${client.user.globalName}:{/cyan-fg} ${text}`);
+      await clientLogic.sendMessage(selectedChannel,text);
     }
     catch (error) {
       messages.writeMessage('{red-fg}System:{/red-fg} An error has occured'); // Change to index
