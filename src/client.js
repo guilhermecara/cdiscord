@@ -1,5 +1,3 @@
-require("./env.js");
-
 const { Client, RelationshipManager, Message } = require('discord.js-selfbot-v13');
 const client = new Client();
 

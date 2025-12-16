@@ -58,7 +58,7 @@ function createLoginLayout() {
         top: 'center',
         left: 'center',
         width: '50%',
-        height: 12,
+        height: '40%',
         label: ' Login ',
         border: 'line',
         tags: true,
@@ -80,9 +80,20 @@ function createLoginLayout() {
         mouse: true
     });
 
+    const errorMessage = blessed.box({
+        parent: form,
+        bottom: 0,
+        left: 'center',
+        width: '40%',
+        height: 3,
+        content: '{red-fg}Invalid token.{/red-fg}',
+        tags: true,
+        hidden: true
+    });
+
     const submitBtn = blessed.button({
         parent: form,
-        bottom: 1,
+        bottom: 3,
         left: 'center',
         width: '50%',
         height: 3,
@@ -92,14 +103,13 @@ function createLoginLayout() {
         border: 'line',
         style: { 
             border: { fg: 'cyan' },
-            hover: { bg: 'cyan', fg: 'black' },
-            focus: { bg: 'cyan', fg: 'black' } // Visual feedback
+            hover: { bg: 'cyan', fg: 'black' }        
         },
         mouse: true,
         keys: true
     });
 
-    return { container, form, tokenInput, submitBtn };
+    return { container, form, tokenInput, submitBtn, errorMessage };
 }
 
 function createDiscordLayout() {

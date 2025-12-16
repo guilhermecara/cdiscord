@@ -1,3 +1,5 @@
+const keytar = require('./keytar-utils.js');
+
 function attach (screen, ui, clientLogic) {
 
   const { container, sidebar, main, messages, friends, messageInput, friendSearchInput} = ui;
@@ -11,15 +13,13 @@ function attach (screen, ui, clientLogic) {
   screen.render();
   
   // Discord Client Events
-
-  client.on('ready', async () => {
+  
     messages.writeMessage(`{blue-fg}System:{/blue-fg} Discord loaded. Welcome, ${client.user.username}`); // Change to index
     loadMessages ();
     loadFriends ();
     
     loggedIn =  true;
     screen.render();
-  })
 
   client.on('messageCreate', async message => {
       if (message.channelId != selectedChannel) return;

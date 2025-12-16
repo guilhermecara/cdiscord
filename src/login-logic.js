@@ -1,15 +1,23 @@
-function attach (screen, ui, clientLogic) {
+const keytar = require('./keytar-utils.js');
+
+async function attach (screen, ui, clientLogic) {
     const client = clientLogic.client;
 
-    try {
-        client.login(process.env.DISCORD_TOKEN);
-    }
-    catch {
-        
-    }
+    ui.submitBtn.on("click", async (element) => {
+        const tokenInput = ui.tokenInput.value.trim();
+        if (tokenInput === "") return;
 
-    ui.submitBtn.on("click", (element) => {
+        const originalText = ui.submitBtn.content;
+        ui.submitBtn.setContent("Logging in...");
 
+        try {
+            await client.login(tokenInput);
+        }
+        catch (error) {
+            ui.submitBtn.setContent(originalText);
+            ui.errorMessage.show();
+            screen.render();
+        }
     })
 }
 
