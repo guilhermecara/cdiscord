@@ -4,11 +4,11 @@
 
 # About
 
-**Welcome to Cdiscord** a CLI interface for discord! 
+**Welcome to Cdiscord** a discord CLI! 
 
 # Capabilities
 
-1. Message your friends via the shell!
+1. Direct messages from the terminal.
 
 # Dependencies
 
