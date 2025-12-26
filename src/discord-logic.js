@@ -1,5 +1,3 @@
-const keytar = require('./keytar-utils.js');
-
 const USER_MESSAGE_COLOR = "cyan";
 const OTHER_MESSAGE_COLOR = "blue";
 
@@ -44,6 +42,7 @@ function attach (screen, ui, clientLogic) {
     messages.setContent('');
     messages.pushLine('{yellow-fg}Loading...{/yellow-fg}');
     screen.render();
+    screen.render();
 
     messages.setContent(''); 
     const chatHistory = await clientLogic.getMessages(selectedChannel);
@@ -84,7 +83,7 @@ function attach (screen, ui, clientLogic) {
           child.style.border.fg = "blue";
         });
         selectedChannel = friendList[i].channelId;
-        loadMessages();
+        loadMessages(selectedChannel);
       })
       
       imagePos++;

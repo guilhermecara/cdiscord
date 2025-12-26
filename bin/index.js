@@ -11,28 +11,41 @@ let cdiscordActive = false;
 
 (async () => {
     const screen = ui.initScreen();
-    let loginLayout = ui.createLoginLayout();
-    let discordLayout = ui.createDiscordLayout();
-    //loginLayout.container.hide();
-    //discordLayout.container.hide();
+    let loginLayout;
+    let discordLayout;
 
     function loadLoginScreen() {
-        discordLayout.container.hide();
-        loginLogic.attach(screen, loginLayout, clientLogic);
-        loginLayout.container.show();
+        if (discordLayout != null){
+            screen.remove(discordLayout)
+            discordLayout = null;
+        }
+
+        loginLayout = ui.createLoginLayout();
+        loginLayout.tokenInput.focus(); 
+
         screen.render();
+        loginLogic.attach(screen, loginLayout, clientLogic);
     }
 
     function loadCdiscord() {
-        loginLayout.container.hide();
-        discordLayout.container.show();
+        if (loginLayout != null){
+            screen.remove(loginLayout)
+            loginLayout = null;
+        }
 
-        //Force focus onto the container or a stable child immediately
+        discordLayout = ui.createDiscordLayout();
+        // Force focus onto the container or a stable child immediately
         // This prevents the screen from trying to focus a "ghost" element
         discordLayout.friends.focus(); 
 
         screen.render();
         discordLogic.attach(screen, discordLayout, clientLogic);
+        discordLayout.logoutButton.on("click", async (element) => {
+            keytar.deleteToken();
+            client.destroy(); 
+            cdiscordActive = false; 
+            loadLoginScreen();
+        })
     }
 
     const token = await keytar.getToken();

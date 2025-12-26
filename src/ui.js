@@ -28,7 +28,6 @@ function createLoginLayout() {
         width: '100%',
         height: '100%',
         mouse: true,
-        hidden: false,
     });
 
     const main = blessed.box({
@@ -113,18 +112,106 @@ function createLoginLayout() {
 }
 
 function createDiscordLayout() {
-
+    
     const container = blessed.box ({
         parent: screen,
         width: '100%',
         height: '100%',
         mouse: true,
-        hidden: false,
     })
 
-    const sidebar = blessed.box({
+    const header = blessed.box({
         parent: container,
+        width: '100%-3',
+        height: 3,
+        border: 'line',
         top: 0,
+        label: 'CDiscord',
+        tags: true,
+        mouse: true,
+    });
+
+    const sectionSwitch = blessed.box({
+        parent: header,
+        width: '40%-1', 
+        height: '100%-2', 
+        left: 0,
+        top: 0,
+        mouse: true,
+    });
+
+    const selectServer = blessed.button({
+        parent: sectionSwitch,
+        left: 0,
+        width: '50%',
+        height: '100%',
+        content: 'Servers',
+        align: 'center', 
+        valign: 'middle',
+        style: {
+            //bg: `${UNACTIVE_COLOR}`,
+            border: { fg: 'cyan' },
+            hover: { bg: 'cyan', fg: 'black' },
+            //focus: { bg: 'cyan', fg: 'black' } Programatically
+        },
+        mouse: true
+    });
+
+    const selectPrivateMessages = blessed.button({
+        parent: sectionSwitch,
+        left: '50%',
+        width: '50%',
+        height: '100%',
+        content: 'Messages',
+        align: 'center',
+        valign: 'middle',
+        style: {
+            //bg: `${UNACTIVE_COLOR}`,
+            border: { fg: 'cyan' },
+            hover: { bg: 'cyan', fg: 'black' },
+            //focus: { bg: 'cyan', fg: 'black' } Programatically
+        },
+        mouse: true
+    });
+
+    const logoutButton = blessed.button({
+        parent: header,
+        right: 1,
+        width: 12, 
+        height: '100%-2',
+        content: 'Logout',
+        align: 'center',
+        valign: 'middle',
+        style: {
+            border: { fg: 'red' },
+            fg: 'red',
+            hover: { bg: 'red', fg: 'white' }
+        },
+        mouse: true
+    });
+
+    const body = blessed.box({
+        parent: screen,
+        top: 3,           // Starts after the header
+        left: 0,
+        width: '100%-2',
+        height: '100%-3', // <--- VITAL: Subtract the top offset!
+        // OR use: bottom: 0
+    });
+
+    const main = blessed.box({
+        parent: body,
+        top: 0,
+        left: '20%',
+        width: `80%`,
+        height: '100%',
+        label: ' Chat ',
+        border: 'line',
+        mouse: true,
+    });
+
+    const sidebar = blessed.box({
+        parent: body,
         left: 0,
         width: '20%',
         height: '100%',
@@ -132,14 +219,16 @@ function createDiscordLayout() {
         mouse: true,
         tags: true
     });
-
+    
     const friends = blessed.box({
         parent: sidebar,
+        top: 0,
+        left: 0,
         width: '100%-2',
-        height: '100%',
+        height: '100%-2',
         label: ' Friends ',
         scrollable: true,
-        alwaysScroll: true,
+        //alwaysScroll: true,
         mouse: true,
         scrollbar: {
             style: { bg: UNACTIVE_COLOR }
@@ -147,23 +236,29 @@ function createDiscordLayout() {
         tags: true
     });
 
-    const main = blessed.box({
-        parent: container,
+    const messages = blessed.log({
+        parent: main,
         top: 0,
-        left: '20%',
-        width: '80%',
-        height: '100%',
-        label: ' Chat ',
-        border: 'line',
+        left: 0,
+        width: '100%-3', // Account for borders
+        height: '100%-7', // Account for input bar/borders
+        scrollable: true,
+        alwaysScroll: true,
         mouse: true,
+        scrollbar: {
+            style: { bg: 'blue' }
+        },
+        tags: true,
+        scrollback: 100, // Important: Limits memory usage to 100 lines
     });
 
+    /* 
     const messages = blessed.box({
         parent: main,
         top: 0,
         left: 0,
-        width: '100%-2',
-        height: '100%-5',
+        width: '100%-3',
+        height: '100%-7',
         scrollable: true,
         alwaysScroll: true,
         mouse: true,
@@ -172,6 +267,7 @@ function createDiscordLayout() {
         },
         tags: true
     });
+    */
 
     const friendSearchInput = blessed.textbox({
         parent: friends,
@@ -189,7 +285,7 @@ function createDiscordLayout() {
         }
     });
 
-    // Text Inputs
+    // --- Text Inputs ---
 
     const messageInput = blessed.textbox({
         parent: main,
@@ -237,7 +333,7 @@ function createDiscordLayout() {
         let currentRow = "";
         let visibleInRow = 0;
         
-        let rowSize = this.rowSize
+        let rowSize = messages.rowSize
 
         let i = 0;
         while (i < message.length) {
@@ -252,7 +348,7 @@ function createDiscordLayout() {
                     visibleInRow++;
                     
                     if (visibleInRow >= rowSize) {
-                        this.pushLine(currentRow);
+                        messages.log(currentRow);
                         currentRow = "";
                         visibleInRow = 0;
                     }
@@ -264,7 +360,7 @@ function createDiscordLayout() {
                     visibleInRow++;
                     
                     if (visibleInRow >= rowSize) {
-                        this.pushLine(currentRow);
+                        messages.log(currentRow);
                         currentRow = "";
                         visibleInRow = 0;
                     }
@@ -277,7 +373,7 @@ function createDiscordLayout() {
                         currentRow += char;
                         visibleInRow++;
                         if (visibleInRow >= rowSize) {
-                            this.pushLine(currentRow);
+                            messages.log(currentRow);
                             currentRow = "";
                             visibleInRow = 0;
                         }
@@ -293,7 +389,7 @@ function createDiscordLayout() {
         }
         
         if (currentRow.length > 0) {
-            this.pushLine(currentRow);
+            messages.log(currentRow);
         }
     };
 
@@ -302,7 +398,7 @@ function createDiscordLayout() {
 
         const friendItem = blessed.box({
             parent: friends,
-            top: index * 2 + 3,
+            top: index * 2 + 4,
             width: '100%-3',
             height: 3,
             content: name,   
@@ -326,7 +422,8 @@ function createDiscordLayout() {
         messages,
         friends,
         messageInput,
-        friendSearchInput
+        friendSearchInput,
+        logoutButton
     }; 
 }
 
