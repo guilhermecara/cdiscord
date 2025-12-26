@@ -4,7 +4,7 @@ const OTHER_MESSAGE_COLOR = "blue";
 function attach (screen, ui, clientLogic) {
 
   const { container, sidebar, main, messages, friends, messageInput, friendSearchInput} = ui;
-  const client = clientLogic.client;
+  let client = clientLogic.getClient();
 
   let loggedIn = false;
 
@@ -41,7 +41,6 @@ function attach (screen, ui, clientLogic) {
     
     messages.setContent('');
     messages.pushLine('{yellow-fg}Loading...{/yellow-fg}');
-    screen.render();
     screen.render();
 
     messages.setContent(''); 
@@ -93,7 +92,7 @@ function attach (screen, ui, clientLogic) {
   }
 
   // UI-Events
-
+  
   messageInput.on('submit', async (text) => {
     if (!text.trim()) {
         messageInput.clearValue();

@@ -5,8 +5,6 @@ const discordLogic = require("../src/discord-logic.js");
 const loginLogic = require("../src/login-logic.js");
 const clientLogic = require('../src/client.js');
 const keytar = require('../src/keytar-utils.js');
-
-const client = clientLogic.client;
 let cdiscordActive = false;
 
 (async () => {
@@ -15,19 +13,23 @@ let cdiscordActive = false;
     let discordLayout;
 
     function loadLoginScreen() {
+        screen.focusPop();
         if (discordLayout != null){
             screen.remove(discordLayout)
             discordLayout = null;
         }
-
+        
         loginLayout = ui.createLoginLayout();
         loginLayout.tokenInput.focus(); 
 
+        screen.realloc(); // Expensive, but assures a full reload.
         screen.render();
+        setupListeners ();
         loginLogic.attach(screen, loginLayout, clientLogic);
     }
 
     function loadCdiscord() {
+        screen.focusPop();
         if (loginLayout != null){
             screen.remove(loginLayout)
             loginLayout = null;
@@ -38,32 +40,36 @@ let cdiscordActive = false;
         // This prevents the screen from trying to focus a "ghost" element
         discordLayout.friends.focus(); 
 
-        screen.render();
         discordLogic.attach(screen, discordLayout, clientLogic);
         discordLayout.logoutButton.on("click", async (element) => {
             keytar.deleteToken();
-            client.destroy(); 
+            clientLogic.destroyClient();
             cdiscordActive = false; 
             loadLoginScreen();
         })
+
+        screen.realloc(); // Expensive, but assures a full reload.
+        screen.render();
     }
 
     const token = await keytar.getToken();
 
-    client.on('ready', async () => {
-        if (cdiscordActive) return;
-                
-        keytar.setToken(client.token);
-        cdiscordActive = true;
-
-        loadCdiscord();
-    });
+    function setupListeners () {
+        clientLogic.getClient().on('ready', async () => {
+            if (cdiscordActive) return;
+            
+            keytar.setToken(clientLogic.getClient().token);
+            cdiscordActive = true;
+            
+            loadCdiscord();
+        });
+    }
 
     if (!token) { 
         loadLoginScreen();
     } else {
         try {
-            await clientLogic.client.login(token);
+            await clientLogic.getClient().login(token);
         }
         catch (err) { // Invalid Token or Error.
             loadLoginScreen();

@@ -1,5 +1,30 @@
 const { Client, RelationshipManager, Message } = require('discord.js-selfbot-v13');
-const client = new Client();
+let client = null;
+
+function createClient () {
+  if (client) {
+      try { client.destroy(); } catch (e) {}
+  }
+  client = new Client({
+      checkUpdate: false
+  });
+  return client;
+}
+
+function getClient () {
+  if (client == null) {
+    createClient();
+  }
+  return client;
+}
+
+function destroyClient() {
+    if (client) {
+        client.removeAllListeners();
+        client.destroy();
+        client = null;
+    }
+}
 
 function getFriends () {
     let friends = [];
@@ -46,4 +71,4 @@ async function getMessages (channelId) {
   return messages;
 }
 
-module.exports = {client, getFriends, sendMessage, getMessages};
+module.exports = {getClient, getFriends, sendMessage, getMessages, createClient, destroyClient};
