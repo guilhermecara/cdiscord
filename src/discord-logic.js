@@ -1,20 +1,24 @@
+const nodeEmoji = require('node-emoji');
+
 const USER_MESSAGE_COLOR = "cyan";
 const OTHER_MESSAGE_COLOR = "blue";
 
 function attach (screen, ui, clientLogic) {
 
-  const { container, sidebar, main, messages, friends, messageInput, friendSearchInput} = ui;
+  const { container, sidebar, main, messages, friends, messageInput, friendSearchInput, logoutButton, serverList, channelList, highlightBoxElement, blurBoxElement} = ui;
   let client = clientLogic.getClient();
 
   let loggedIn = false;
 
   let selectedChannel = "";
+  let selectedServer;
 
   // --- Initial Setup ---
 
   messages.writeMessage(`{blue-fg}System:{/blue-fg} Discord loaded. Welcome, ${client.user.username}`); // Change to index
   loadMessages ();
   loadFriends ();
+  loadServers ();
   
   loggedIn =  true;
   screen.render();
@@ -29,7 +33,9 @@ function attach (screen, ui, clientLogic) {
         nameColor = USER_MESSAGE_COLOR;
       }
 
-      messages.pushLine(`{${nameColor}-fg}${message.author.username}:{/${nameColor}-fg} ${message.content}`);
+      let parsedMessage = `{${nameColor}-fg}${message.author.username}:{/${nameColor}-fg} ${message.content}`;
+      messages.writeMessage(parsedMessage)
+
       messages.setScrollPerc(messages.getScrollPerc() + 1);
       screen.render();
   });
@@ -39,21 +45,34 @@ function attach (screen, ui, clientLogic) {
   async function loadMessages () {
     if (!selectedChannel) return;
     
+    let channelInfo = await clientLogic.getChannelInfo(selectedChannel);
+    if (!channelInfo) return;
+
     messages.setContent('');
-    messages.pushLine('{yellow-fg}Loading...{/yellow-fg}');
+    messages.writeMessage('{yellow-fg}Loading...{/yellow-fg}')
     screen.render();
 
     messages.setContent(''); 
-    const chatHistory = await clientLogic.getMessages(selectedChannel);
-    for (let i = chatHistory.length - 1; i > -1; i--) {
-      let message = chatHistory[i];
-      let nameColor = OTHER_MESSAGE_COLOR;
-      if (message.author == client.user.username) {
-        nameColor = USER_MESSAGE_COLOR;
+    try {
+      const chatHistory = await clientLogic.getMessages(selectedChannel);
+      for (let i = chatHistory.length - 1; i > -1; i--) {
+        let message = chatHistory[i];
+        let nameColor = OTHER_MESSAGE_COLOR;
+        if (message.author == client.user.username) {
+          nameColor = USER_MESSAGE_COLOR;
+        }
+
+        let parsedMessage = `{${nameColor}-fg}${message.author}:{/${nameColor}-fg} ${message.content}`;
+        messages.writeMessage(parsedMessage);
       }
-      messages.writeMessage(`{${nameColor}-fg}${message.author}:{/${nameColor}-fg} ${message.content}`);
+      messages.setScrollPerc(100);
     }
-    messages.setScrollPerc(100);
+    catch {
+      messages.writeMessage('{red-fg}System:{/red-fg} Unable to retrieve the message history');
+      channelInfo.canSend = false;
+    }
+
+    messageInput.hidden = !channelInfo.canSend;
 
     screen.realloc(); // Expensive, but assures a full reload.
     screen.render();
@@ -74,20 +93,98 @@ function attach (screen, ui, clientLogic) {
       let friendItem = friends.createFriendElement(friendList[i].name, imagePos);
       friendItem.on("click", (element) => {
         screen.focusPop();
+
+        channelList.children.slice().forEach(child => { // Bugfix with message history selection
+          blurBoxElement(child);
+        });
+
         friends.children.slice().forEach(child => {
           if (child.options.content == friendList[i].name) {
-            child.style.border.fg = "cyan";
+            highlightBoxElement(child);
             return;
           }
-          child.style.border.fg = "blue";
+          blurBoxElement(child);
         });
+
         selectedChannel = friendList[i].channelId;
-        loadMessages(selectedChannel);
+        loadMessages();
       })
       
       imagePos++;
     }
 
+    screen.render();
+  }
+
+  async function loadServers () {
+    let servers = await clientLogic.getServers();
+
+    serverList.children.forEach(child => {
+      child.destroy();
+    });
+    serverList.setContent('');
+
+    for (let i = 0; i < servers.length; i++) {
+      let serverItem = serverList.createServerListElement(servers[i].name, i);
+      serverItem.on("click", (element) => {
+        screen.focusPop();
+
+        channelList.children.forEach(child => {
+          child.destroy();
+        });
+
+        serverList.children.slice().forEach(child => {
+          if (child.options.content == servers[i].name) {
+            highlightBoxElement(child);
+            return;
+          }
+          blurBoxElement(child);
+        });
+        selectedServer = servers[i].id;
+        loadChannels(selectedServer);
+
+        messages.setContent('');
+        messageInput.hidden = true;
+        screen.realloc(); 
+        screen.render();
+      })
+    }
+    
+    screen.render();
+  }
+
+  async function loadChannels(serverId) {
+    let channels = await clientLogic.getChannels(serverId);
+
+    channelList.children.forEach(child => {
+      child.destroy();
+    });
+    channelList.setContent('');
+
+    for (let i = 0; i < channels.length; i++) {
+      if (channels[i].type != "GUILD_TEXT") continue;
+
+      let channelName = nodeEmoji.strip(channels[i].name);
+      let channelItem = channelList.createChannelListElement(channelName, i);
+
+      channelItem.on("click", (element) => {
+        screen.focusPop();
+        friends.children.slice().forEach(child => {
+          blurBoxElement(child);
+        });
+        channelList.children.slice().forEach(child => {
+          if (child.options.content == channelName) {
+            highlightBoxElement(child);
+            return;
+          }
+          blurBoxElement(child);
+        });
+        selectedChannel = channels[i].id;
+        loadMessages();
+      })
+    }
+
+    channelList.setScrollPerc(0);
     screen.render();
   }
 
@@ -140,7 +237,6 @@ function filterSearchBarInput(friendName, searchValue) {
 
   let normalizedName = friendName.toLowerCase().trim();
   let normalizedSearch = searchValue.toLowerCase().trim();
-  
   return normalizedName.includes(normalizedSearch);
 }   
 

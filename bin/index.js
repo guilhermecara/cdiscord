@@ -7,6 +7,13 @@ const clientLogic = require('../src/client.js');
 const keytar = require('../src/keytar-utils.js');
 let cdiscordActive = false;
 
+/*
+const screen = ui.initScreen();
+let discordLayout = ui.createDiscordLayout();
+screen.render();
+*/
+
+
 (async () => {
     const screen = ui.initScreen();
     let loginLayout;
@@ -64,6 +71,8 @@ let cdiscordActive = false;
             loadCdiscord();
         });
     }
+
+    setupListeners ();
 
     if (!token) { 
         loadLoginScreen();

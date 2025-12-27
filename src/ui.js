@@ -1,5 +1,5 @@
 // MAIN UI LAYOUT FACTORY. //
-
+const nodeEmoji = require('node-emoji');
 const blessed = require('neo-blessed');
 
 const UNACTIVE_COLOR = 'blue';
@@ -112,7 +112,6 @@ function createLoginLayout() {
 }
 
 function createDiscordLayout() {
-    
     const container = blessed.box ({
         parent: screen,
         width: '100%',
@@ -151,8 +150,6 @@ function createDiscordLayout() {
         style: {
             //bg: `${UNACTIVE_COLOR}`,
             border: { fg: 'cyan' },
-            hover: { bg: 'cyan', fg: 'black' },
-            //focus: { bg: 'cyan', fg: 'black' } Programatically
         },
         mouse: true
     });
@@ -168,7 +165,6 @@ function createDiscordLayout() {
         style: {
             //bg: `${UNACTIVE_COLOR}`,
             border: { fg: 'cyan' },
-            hover: { bg: 'cyan', fg: 'black' },
             //focus: { bg: 'cyan', fg: 'black' } Programatically
         },
         mouse: true
@@ -236,6 +232,55 @@ function createDiscordLayout() {
         tags: true
     });
 
+    const servers = blessed.box({
+        parent: sidebar,
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        scrollable: true,
+        //alwaysScroll: true,
+        mouse: true,
+        scrollbar: {
+            style: { bg: UNACTIVE_COLOR }
+        },
+        tags: true,
+    });
+
+    const serverList = blessed.box({
+        parent: servers,
+        top: 0,
+        left: 0,
+        width: '100%-2',
+        height: '50%',
+        label: 'Servers',
+        scrollable: true,
+        //alwaysScroll: true,
+        mouse: true,
+        scrollbar: {
+            style: { bg: UNACTIVE_COLOR }
+        },
+        tags: true,
+        border: 'line',
+    });
+
+    const channelList = blessed.box({
+        parent: servers,
+        top: '50%',
+        left: 0,
+        width: '100%-2',
+        height: '50%',
+        label: 'Channels',
+        scrollable: true,
+        //alwaysScroll: true,
+        mouse: true,
+        scrollbar: {
+            style: { bg: UNACTIVE_COLOR }
+        },
+        tags: true,
+        border: 'line',
+    });
+
     const messages = blessed.log({
         parent: main,
         top: 0,
@@ -251,23 +296,6 @@ function createDiscordLayout() {
         tags: true,
         scrollback: 100, // Important: Limits memory usage to 100 lines
     });
-
-    /* 
-    const messages = blessed.box({
-        parent: main,
-        top: 0,
-        left: 0,
-        width: '100%-3',
-        height: '100%-7',
-        scrollable: true,
-        alwaysScroll: true,
-        mouse: true,
-        scrollbar: {
-            style: { bg: UNACTIVE_COLOR }
-        },
-        tags: true
-    });
-    */
 
     const friendSearchInput = blessed.textbox({
         parent: friends,
@@ -335,6 +363,8 @@ function createDiscordLayout() {
         
         let rowSize = messages.rowSize
 
+        message = nodeEmoji.unemojify(message);
+
         let i = 0;
         while (i < message.length) {
             const tagStart = message.indexOf("{", i);
@@ -396,6 +426,8 @@ function createDiscordLayout() {
     friends.createFriendElement = function (name, index) {
         let safeName = Array.from(name).slice(0, 10 - 3).join('') + "...";
 
+        name = nodeEmoji.strip(name)
+
         const friendItem = blessed.box({
             parent: friends,
             top: index * 2 + 4,
@@ -415,6 +447,88 @@ function createDiscordLayout() {
         return friendItem;
     };
 
+    serverList.createServerListElement = function (name, index) {
+
+        name = nodeEmoji.strip(name)
+
+        const serverListItem = blessed.box({
+            parent: serverList,
+            top: index * 2,
+            width: '100%-3',
+            height: 3,
+            content: name,   
+            border: 'line',
+            mouse: true,
+            tags: true,
+            wrap: false,    
+            style: {
+                border: { fg: UNACTIVE_COLOR },
+                focus: { border: { fg: ACTIVE_COLOR } }
+            }
+        });
+
+        return serverListItem;
+    }
+
+    channelList.createChannelListElement = function (name, index) {
+
+        name = nodeEmoji.strip(name)
+
+        const channelListItem = blessed.box({
+            parent: channelList,
+            top: index * 2,
+            width: '100%-3',
+            height: 3,
+            content: name,   
+            border: 'line',
+            mouse: true,
+            tags: true,
+            wrap: false,    
+            style: {
+                border: { fg: UNACTIVE_COLOR },
+                focus: { border: { fg: ACTIVE_COLOR } }
+            }
+        });
+
+        return channelListItem;
+    }
+
+    blurBoxElement(selectServer);
+    highlightBoxElement(selectPrivateMessages);
+
+    servers.hide();
+    friends.show();
+
+    selectPrivateMessages.on("click", function() {
+        blurBoxElement(selectServer);
+        highlightBoxElement(selectPrivateMessages);
+
+        servers.hide();
+        friends.show();
+
+        screen.render();
+    })
+
+    selectServer.on("click", function() {
+        highlightBoxElement(selectServer);
+        blurBoxElement(selectPrivateMessages);
+
+        friends.hide();
+        servers.show();
+
+        screen.render();
+    })
+
+    function highlightBoxElement (element) {
+        element.style.bg = "cyan";
+        element.style.fg = "black";
+    }
+
+    function blurBoxElement (element) {
+        element.style.bg = "";
+        element.style.fg = "";
+    }
+
     return {
         container,
         sidebar,
@@ -423,7 +537,13 @@ function createDiscordLayout() {
         friends,
         messageInput,
         friendSearchInput,
-        logoutButton
+        logoutButton,
+        serverList,
+        channelList,
+
+        // Helper functions!
+        highlightBoxElement,
+        blurBoxElement
     }; 
 }
 
